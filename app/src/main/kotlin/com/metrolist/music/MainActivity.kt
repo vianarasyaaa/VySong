@@ -50,6 +50,7 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RectangleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
@@ -105,6 +106,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.effects.vibrancy
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -149,6 +156,7 @@ import com.metrolist.music.constants.ExperimentalLyricsKey
 import com.metrolist.music.constants.ForceBottomNavBarKey
 import com.metrolist.music.constants.LastSeenVersionKey
 import com.metrolist.music.constants.ListenTogetherInTopBarKey
+import com.metrolist.music.constants.LiquidGlassEnabledKey
 import com.metrolist.music.constants.ListenTogetherUsernameKey
 import com.metrolist.music.constants.LyricsProviderOrderKey
 import com.metrolist.music.constants.MiniPlayerBottomSpacing
@@ -741,10 +749,8 @@ class MainActivity : FragmentActivity() {
                 val (listenTogetherInTopBar) = rememberPreference(ListenTogetherInTopBarKey, defaultValue = true)
                 val navigationItems =
                     remember(listenTogetherInTopBar) {
-                        if (listenTogetherInTopBar) {
-                            Screens.MainScreens.filter { it != Screens.ListenTogether }
-                        } else {
-                            Screens.MainScreens
+                        Screens.MainScreens.map { screen ->
+                            if (!listenTogetherInTopBar && screen == Screens.Radio) Screens.ListenTogether else screen
                         }
                     }
                 val routeIndexMap = remember(navigationItems) {
@@ -774,6 +780,8 @@ class MainActivity : FragmentActivity() {
                     remember {
                         listOf(
                             Screens.Home.route,
+                            Screens.New.route,
+                            Screens.Radio.route,
                             Screens.Library.route,
                             Screens.ListenTogether.route,
                             "settings",
@@ -1014,6 +1022,8 @@ class MainActivity : FragmentActivity() {
                     remember(navBackStackEntry) {
                         when (navBackStackEntry?.destination?.route) {
                             Screens.Home.route -> R.string.home
+                            Screens.New.route -> R.string.nav_new
+                            Screens.Radio.route -> R.string.radio
                             Screens.Search.route -> R.string.search
                             Screens.Library.route -> R.string.filter_library
                             Screens.ListenTogether.route -> R.string.together
@@ -1032,8 +1042,11 @@ class MainActivity : FragmentActivity() {
 
                 val baseBg = if (pureBlack) Color.Black else MaterialTheme.colorScheme.surfaceContainer
                 val artistNameAliases by ArtistNameAliases.aliases.collectAsStateWithLifecycle()
+                val (liquidGlassEnabled) = rememberPreference(LiquidGlassEnabledKey, defaultValue = true)
+                val navigationBackdrop = if (liquidGlassEnabled) rememberLayerBackdrop() else null
 
                 CompositionLocalProvider(
+                    LocalLiquidBackdrop provides navigationBackdrop,
                     LocalDatabase provides database,
                     LocalNavController provides navController,
                     LocalContentColor provides if (pureBlack) Color.White else contentColorFor(MaterialTheme.colorScheme.surface),
@@ -1060,6 +1073,24 @@ class MainActivity : FragmentActivity() {
                             ) {
                                 Row {
                                     TopAppBar(
+                                        modifier = Modifier.then(
+                                            if (navigationBackdrop != null) {
+                                                Modifier.drawBackdrop(
+                                                    backdrop = navigationBackdrop,
+                                                    shape = { RectangleShape },
+                                                    effects = {
+                                                        vibrancy()
+                                                        blur(12.dp.toPx())
+                                                        lens(8.dp.toPx(), 18.dp.toPx())
+                                                    },
+                                                    onDrawSurface = {
+                                                        drawRect(baseBg.copy(alpha = 0.58f))
+                                                    },
+                                                )
+                                            } else {
+                                                Modifier
+                                            },
+                                        ),
                                         title = {
                                             Text(
                                                 text = currentTitleRes?.let { stringResource(it) } ?: "",
@@ -1117,8 +1148,8 @@ class MainActivity : FragmentActivity() {
                                         scrollBehavior = topAppBarScrollBehavior,
                                         colors =
                                             TopAppBarDefaults.topAppBarColors(
-                                                containerColor = if (pureBlack) Color.Black else MaterialTheme.colorScheme.surfaceContainer,
-                                                scrolledContainerColor = if (pureBlack) Color.Black else MaterialTheme.colorScheme.surfaceContainer,
+                                                containerColor = if (navigationBackdrop != null) Color.Transparent else baseBg,
+                                                scrolledContainerColor = if (navigationBackdrop != null) Color.Transparent else baseBg,
                                                 titleContentColor = MaterialTheme.colorScheme.onSurface,
                                                 actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                                                 navigationIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -1215,6 +1246,7 @@ class MainActivity : FragmentActivity() {
                                         navigationItems = navigationItems,
                                         currentRoute = currentRoute,
                                         onItemClick = onNavItemClick,
+                                        backdrop = navigationBackdrop,
                                         pureBlack = pureBlack,
                                         slimNav = slimNav,
                                         onSearchLongClick = onSearchLongClick,
@@ -1388,7 +1420,9 @@ class MainActivity : FragmentActivity() {
                                             slideOutHorizontally { it / 8 } + fadeOut(tween(200))
                                         }
                                     },
-                                    modifier = Modifier.nestedScroll(topAppBarScrollBehavior.nestedScrollConnection),
+                                    modifier = Modifier
+                                        .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection)
+                                        .then(navigationBackdrop?.let { Modifier.layerBackdrop(it) } ?: Modifier),
                                 ) {
                                     navigationBuilder(
                                         navController = navController,

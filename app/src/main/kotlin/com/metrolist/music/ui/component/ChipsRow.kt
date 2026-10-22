@@ -63,6 +63,7 @@ fun <E> ChipsRow(
     modifier: Modifier = Modifier,
     containerColor: Color = MaterialTheme.colorScheme.surfaceContainer,
 ) {
+    val liquidBackdrop = LocalLiquidBackdrop.current
     Row(
         modifier =
         modifier
@@ -77,11 +78,21 @@ fun <E> ChipsRow(
                 label = { Text(label) },
                 selected = currentValue == value,
                 colors = FilterChipDefaults.filterChipColors(
-                    containerColor = containerColor,
+                    containerColor = Color.Transparent,
+                    selectedContainerColor = Color.Transparent,
                 ),
                 onClick = { onValueUpdate(value) },
                 shape = RoundedCornerShape(16.dp),
-                border = null
+                border = null,
+                modifier = Modifier.liquidGlassSurface(
+                    backdrop = liquidBackdrop,
+                    shape = RoundedCornerShape(16.dp),
+                    tint = if (currentValue == value) {
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+                    } else {
+                        containerColor.copy(alpha = 0.28f)
+                    },
+                ),
             )
 
             Spacer(Modifier.width(8.dp))

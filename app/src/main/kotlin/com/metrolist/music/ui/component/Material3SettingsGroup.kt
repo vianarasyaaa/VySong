@@ -33,6 +33,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.dp
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.effects.vibrancy
 
 /**
  * A Material 3 Expressive style settings group component
@@ -45,6 +49,7 @@ fun Material3SettingsGroup(
     items: List<Material3SettingsItem>,
     useLowContrast: Boolean = false
 ) {
+    val liquidBackdrop = LocalLiquidBackdrop.current
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -72,17 +77,35 @@ fun Material3SettingsGroup(
                     else -> RoundedCornerShape(6.dp)
                 }
 
+                val cardColor = if (!useLowContrast) {
+                    MaterialTheme.colorScheme.surfaceVariant
+                } else {
+                    MaterialTheme.colorScheme.surfaceContainerLow
+                }
+
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .animateContentSize(),
+                        .animateContentSize()
+                        .then(
+                            if (liquidBackdrop != null) {
+                                Modifier.drawBackdrop(
+                                    backdrop = liquidBackdrop,
+                                    shape = { shape },
+                                    effects = {
+                                        vibrancy()
+                                        blur(8.dp.toPx())
+                                        lens(8.dp.toPx(), 16.dp.toPx())
+                                    },
+                                    onDrawSurface = { drawRect(cardColor.copy(alpha = 0.38f)) },
+                                )
+                            } else {
+                                Modifier
+                            },
+                        ),
                     shape = shape,
                     colors = CardDefaults.cardColors(
-                        containerColor = if (!useLowContrast) {
-                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                        } else {
-                            MaterialTheme.colorScheme.surfaceContainerLow
-                        }
+                        containerColor = if (liquidBackdrop != null) Color.Transparent else cardColor.copy(alpha = 0.3f)
                     ),
                     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {

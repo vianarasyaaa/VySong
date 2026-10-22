@@ -44,6 +44,7 @@ fun NavigationTitle(
     onClick: (() -> Unit)? = null,
     onPlayAllClick: (() -> Unit)? = null,
 ) {
+    val liquidBackdrop = LocalLiquidBackdrop.current
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -85,11 +86,17 @@ fun NavigationTitle(
                 shape = RoundedCornerShape(12.dp),
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.primary
+                    containerColor = Color.Transparent,
+                    contentColor = MaterialTheme.colorScheme.primary,
                 ),
                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 2.dp),
                 modifier = Modifier
                     .height(24.dp)
+                    .liquidGlassSurface(
+                        backdrop = liquidBackdrop,
+                        shape = RoundedCornerShape(12.dp),
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                    ),
             ) {
                 Text(
                     text = stringResource(R.string.play_all),

@@ -107,7 +107,9 @@ import com.metrolist.music.ui.component.HideOnScrollFAB
 import com.metrolist.music.ui.component.IconButton
 import com.metrolist.music.ui.component.LinkSegment
 import com.metrolist.music.ui.component.LocalMenuState
+import com.metrolist.music.ui.component.LocalLiquidBackdrop
 import com.metrolist.music.ui.component.NavigationTitle
+import com.metrolist.music.ui.component.liquidGlassSurface
 import com.metrolist.music.ui.component.SongListItem
 import com.metrolist.music.ui.component.YouTubeGridItem
 import com.metrolist.music.ui.component.YouTubeListItem
@@ -144,6 +146,7 @@ fun ArtistScreen(
     val haptic = LocalHapticFeedback.current
     val coroutineScope = rememberCoroutineScope()
     val playerConnection = LocalPlayerConnection.current ?: return
+    val liquidBackdrop = LocalLiquidBackdrop.current
     val listenTogetherManager = LocalListenTogetherManager.current
     val isGuest = listenTogetherManager?.isInRoom == true && !listenTogetherManager.isHost
     val isPlaying by playerConnection.isEffectivelyPlaying.collectAsStateWithLifecycle()
@@ -375,13 +378,19 @@ fun ArtistScreen(
                                             ButtonDefaults.outlinedButtonColors(
                                                 containerColor =
                                                     if (isChannelSubscribed) {
-                                                        MaterialTheme.colorScheme.surface
+                                                        MaterialTheme.colorScheme.surface.copy(alpha = 0.4f)
                                                     } else {
-                                                        Color.Transparent
+                                                        MaterialTheme.colorScheme.surface.copy(alpha = 0.4f)
                                                     },
                                             ),
                                         shape = RoundedCornerShape(50),
-                                        modifier = Modifier.height(40.dp),
+                                            modifier = Modifier
+                                                .height(40.dp)
+                                                .liquidGlassSurface(
+                                                    liquidBackdrop,
+                                                    RoundedCornerShape(50),
+                                                    MaterialTheme.colorScheme.surface.copy(alpha = 0.4f),
+                                                ),
                                     ) {
                                         Text(
                                             text = stringResource(if (isChannelSubscribed) R.string.subscribed else R.string.subscribe),
@@ -404,7 +413,13 @@ fun ArtistScreen(
                                                         playerConnection.playQueue(YouTubeQueue(radioEndpoint))
                                                     },
                                                     shape = RoundedCornerShape(50),
-                                                    modifier = Modifier.height(40.dp),
+                                                    modifier = Modifier
+                                                        .height(40.dp)
+                                                        .liquidGlassSurface(
+                                                            liquidBackdrop,
+                                                            RoundedCornerShape(50),
+                                                            MaterialTheme.colorScheme.surface.copy(alpha = 0.4f),
+                                                        ),
                                                 ) {
                                                     Icon(
                                                         painter = painterResource(R.drawable.radio),
@@ -430,9 +445,10 @@ fun ArtistScreen(
                                                     modifier =
                                                         Modifier
                                                             .size(48.dp)
-                                                            .background(
-                                                                MaterialTheme.colorScheme.primary,
+                                                            .liquidGlassSurface(
+                                                                liquidBackdrop,
                                                                 RoundedCornerShape(24.dp),
+                                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
                                                             ),
                                                 ) {
                                                     Icon(

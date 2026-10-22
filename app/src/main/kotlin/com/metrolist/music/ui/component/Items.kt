@@ -259,6 +259,10 @@ inline fun ListItem(
     isActive: Boolean = false,
     isAvailable: Boolean = true,
 ) {
+    val liquidBackdrop = LocalLiquidBackdrop.current
+    val activeTint =
+        if (isSelected == true) MaterialTheme.colorScheme.primary.copy(alpha = 0.32f)
+        else MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.32f)
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = if (isActive) {
@@ -266,17 +270,17 @@ inline fun ListItem(
                 .height(ListItemHeight)
                 .padding(horizontal = 8.dp)
                 .clip(RoundedCornerShape(8.dp))
-                .background(
-                    color = // selected active
-                        if (isSelected == true) MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
-                        else MaterialTheme.colorScheme.secondaryContainer
-                )
+                .liquidGlassSurface(liquidBackdrop, RoundedCornerShape(8.dp), activeTint)
         } else if (isSelected == true) {
             modifier // inactive selected
                 .height(ListItemHeight)
                 .padding(horizontal = 8.dp)
                 .clip(RoundedCornerShape(8.dp))
-                .background(color = MaterialTheme.colorScheme.inversePrimary.copy(alpha = 0.4f))
+                .liquidGlassSurface(
+                    liquidBackdrop,
+                    RoundedCornerShape(8.dp),
+                    MaterialTheme.colorScheme.inversePrimary.copy(alpha = 0.35f),
+                )
         } else {
             modifier // default
                 .height(ListItemHeight)

@@ -271,6 +271,7 @@ dependencies {
     implementation(libs.material3)
     implementation(libs.palette)
     implementation(libs.materialKolor)
+    implementation(libs.backdrop)
 
     implementation(libs.appcompat)
 

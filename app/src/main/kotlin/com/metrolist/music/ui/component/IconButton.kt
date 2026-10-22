@@ -34,6 +34,10 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.effects.vibrancy
 
 @Composable
 fun ResizableIconButton(
@@ -70,12 +74,35 @@ fun IconButton(
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     content: @Composable () -> Unit,
 ) {
+    val liquidBackdrop = LocalLiquidBackdrop.current
+    val glassColor =
+        if (colors.containerColor == Color.Transparent) {
+            MaterialTheme.colorScheme.surfaceContainerHigh
+        } else {
+            colors.containerColor
+        }
+
     Box(
         modifier = modifier
             .minimumInteractiveComponentSize()
             .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
             .clip(CircleShape)
-            .background(color = colors.containerColor)
+            .then(
+                if (liquidBackdrop != null) {
+                    Modifier.drawBackdrop(
+                        backdrop = liquidBackdrop,
+                        shape = { CircleShape },
+                        effects = {
+                            vibrancy()
+                            blur(8.dp.toPx())
+                            lens(10.dp.toPx(), 18.dp.toPx())
+                        },
+                        onDrawSurface = { drawRect(glassColor.copy(alpha = 0.45f)) },
+                    )
+                } else {
+                    Modifier.background(color = colors.containerColor)
+                },
+            )
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick,
